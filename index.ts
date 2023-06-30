@@ -1,14 +1,13 @@
 import express from "express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
-import session, { SessionData } from "express-session";
+import session from "express-session";
 import { PrismaSessionStore } from "@quixo3/prisma-session-store";
 
 import { prismaClient } from "./util/prismaClient";
 
 import { router as bookRouter } from "./routes/book-route";
 import { router as userRouter } from "./routes/user-route";
-import { PrismaClient } from "@prisma/client";
 
 declare module "express-session" {
   export interface SessionData {
@@ -27,7 +26,7 @@ app.use(
     /* no session is saved for a request where nothing was changed about the
       session */
     saveUninitialized: false,
-    store: new PrismaSessionStore<SessionData>(new PrismaClient(), {
+    store: new PrismaSessionStore(prismaClient, {
       checkPeriod: 2 * 60 * 1000, //ms
       dbRecordIdIsSessionId: true,
       dbRecordIdFunction: undefined,
