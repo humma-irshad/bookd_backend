@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Book {
+  id         String   @id @default(uuid())
+  title      String
+  author     String
+  coverImage String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  Review     Review[]
+
+  @@unique([title, author])
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Review    Review[]
+
+  @@index([username])
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  review     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  book       Book     @relation(fields: [bookId], references: [id])
+  bookId     String
+  reviwer    User     @relation(fields: [reviewerId], references: [id])
+  reviewerId String
+
+  @@unique([bookId, reviewerId])
+  @@index([bookId, reviewerId])
+}
+
+model Session {
+  id         String   @id
+  isLoggedIn Boolean
+  expiresAt  DateTime
+}
