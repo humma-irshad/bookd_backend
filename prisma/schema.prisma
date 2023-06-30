@@ -49,7 +49,8 @@ model Review {
 }
 
 model Session {
-  id         String   @id
-  isLoggedIn Boolean
-  expiresAt  DateTime
+  id        String   @id
+  sid       String   @unique
+  data      String
+  expiresAt DateTime
 }
