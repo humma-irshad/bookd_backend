@@ -1,11 +1,11 @@
 import { NextFunction, Response } from "express";
 import { verify } from "jsonwebtoken";
 
-import { TypedRequest } from "../util/extendedTypes";
+import { RequestWithToken } from "../util/extendedTypes";
 import { prismaClient } from "../util/prismaClient";
 
 export const auth = async (
-  req: TypedRequest<{ token?: string, }>,
+  req: RequestWithToken,
   res: Response,
   next: NextFunction
 ) => {

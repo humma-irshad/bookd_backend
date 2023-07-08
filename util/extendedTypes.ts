@@ -11,12 +11,17 @@ const envVariables = z.object({
 envVariables.parse(process.env);
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
     interface ProcessEnv extends z.infer<typeof envVariables> {}
   }
 }
 
-export interface TypedRequest<T> extends Request {
-  body: T;
+export interface RequestWithToken extends Request {
   token?: string;
+}
+
+export interface TypedRequest<T> extends RequestWithToken {
+  body: T;
 }

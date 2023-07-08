@@ -87,7 +87,7 @@ export const loginUser = async (
 };
 
 export const deleteUser = async (
-  req: TypedRequest<{ email: string; password: string, }>,
+  req: TypedRequest<{ email: string; password: string }>,
   res: Response
 ) => {
   const user = await prismaClient.user.findFirst({
