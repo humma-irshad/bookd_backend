@@ -1,10 +1,7 @@
 import { Request, Response } from "express";
 
+import { TypedRequest } from "../util/extendedTypes";
 import { prismaClient } from "../util/prismaClient";
-
-export interface TypedRequestBody<T> extends Request {
-  body: T;
-}
 
 export const getBooks = async (req: Request, res: Response) => {
   try {
@@ -19,7 +16,7 @@ export const getBooks = async (req: Request, res: Response) => {
 };
 
 export const addBook = async (
-  req: TypedRequestBody<{
+  req: TypedRequest<{
     title: string;
     author: string;
     coverImage: string;
@@ -39,9 +36,10 @@ export const addBook = async (
       },
     });
 
-    res
-      .status(201)
-      .send({ status: "OK", message: "resouce created successfully" });
+    res.status(201).send({
+      status: "OK",
+      message: "resouce created successfully",
+    });
   } catch (error) {
     res
       .status(400)
@@ -50,7 +48,7 @@ export const addBook = async (
 };
 
 export const editBook = async (
-  req: TypedRequestBody<{
+  req: TypedRequest<{
     title: string;
     author: string;
     coverImage: string;
@@ -63,9 +61,10 @@ export const editBook = async (
   try {
     await prismaClient.book.update({ where: { id: _id }, data: req.body });
 
-    res
-      .status(204)
-      .send({ status: "OK", messgae: "resource updated successfully" });
+    res.status(204).send({
+      status: "OK",
+      messgae: "resource updated successfully",
+    });
   } catch (error) {
     res
       .status(400)

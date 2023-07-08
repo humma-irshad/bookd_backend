@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteUser = exports.loginUser = exports.signupUser = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const prismaClient_1 = require("../util/prismaClient");
+const getToken_1 = require("../util/getToken");
 const signupUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield prismaClient_1.prismaClient.user.findFirst({
         where: { OR: [{ username: req.body.username }, { email: req.body.email }] },
@@ -35,6 +36,7 @@ const signupUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         return;
     }
     const hashedPassword = bcryptjs_1.default.hashSync(req.body.password, 12);
+    const token = yield (0, getToken_1.getAuthToken)(req.body.username);
     yield prismaClient_1.prismaClient.user.create({
         data: {
             username: req.body.username,
@@ -44,13 +46,13 @@ const signupUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     });
     res
         .status(201)
-        .send({ status: "OK", messgae: "resource created successfully" });
+        .send({ status: "OK", messgae: "resource created successfully", token });
 });
 exports.signupUser = signupUser;
 const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield prismaClient_1.prismaClient.user.findFirst({
         where: {
-            OR: [{ email: req.body.email }, { username: req.body.username }],
+            AND: [{ email: req.body.email }, { username: req.body.username }],
         },
     });
     if (!user) {
@@ -64,17 +66,25 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             .send({ status: "NOT AUTHORIZED", message: "incorrect password" });
         return;
     }
-    req.session.isLoggedIn = true;
-    res.status(200).send({ status: "OK", message: "user logged-in", data: user });
+    const token = yield (0, getToken_1.getAuthToken)(req.body.username);
+    res
+        .status(200)
+        .json({ status: "OK", message: "user logged-in", data: { user, token } });
 });
 exports.loginUser = loginUser;
 const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        yield prismaClient_1.prismaClient.user.delete({ where: { username: "hmmm" } });
-        res.status(200).send("done");
+    const user = yield prismaClient_1.prismaClient.user.findFirst({
+        where: { email: req.body.email, password: req.body.password },
+    });
+    if (!user) {
+        res.status(404).send({ status: "FAILED", message: "user not found" });
+        return;
     }
-    catch (_a) {
-        res.status(400).send("errorx");
-    }
+    yield prismaClient_1.prismaClient.user.delete({
+        where: { email: user.email },
+    });
+    res
+        .status(200)
+        .send({ status: "OK", message: "resource deleted successfully" });
 });
 exports.deleteUser = deleteUser;

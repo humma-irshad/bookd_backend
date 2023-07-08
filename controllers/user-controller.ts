@@ -1,14 +1,12 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import bcrypt from "bcryptjs";
 
+import { TypedRequest } from "../util/extendedTypes";
 import { prismaClient } from "../util/prismaClient";
-
-export interface TypedRequestBody<T> extends Request {
-  body: T;
-}
+import { getAuthToken } from "../util/getToken";
 
 export const signupUser = async (
-  req: TypedRequestBody<{ username: string; email: string; password: string }>,
+  req: TypedRequest<{ username: string; email: string; password: string }>,
   res: Response
 ) => {
   const user = await prismaClient.user.findFirst({
@@ -36,6 +34,7 @@ export const signupUser = async (
 
   const hashedPassword = bcrypt.hashSync(req.body.password, 12);
 
+  const token = await getAuthToken(req.body.username);
   await prismaClient.user.create({
     data: {
       username: req.body.username,
@@ -46,11 +45,11 @@ export const signupUser = async (
 
   res
     .status(201)
-    .send({ status: "OK", messgae: "resource created successfully" });
+    .send({ status: "OK", messgae: "resource created successfully", token });
 };
 
 export const loginUser = async (
-  req: TypedRequestBody<{
+  req: TypedRequest<{
     username: string;
     email: string;
     password: string;
@@ -59,7 +58,7 @@ export const loginUser = async (
 ) => {
   const user = await prismaClient.user.findFirst({
     where: {
-      OR: [{ email: req.body.email }, { username: req.body.username }],
+      AND: [{ email: req.body.email }, { username: req.body.username }],
     },
   });
 
@@ -80,16 +79,30 @@ export const loginUser = async (
     return;
   }
 
-  req.session.isLoggedIn = true;
-  res.status(200).send({ status: "OK", message: "user logged-in", data: user });
+  const token = await getAuthToken(req.body.username);
+
+  res
+    .status(200)
+    .json({ status: "OK", message: "user logged-in", data: { user, token } });
 };
 
-export const deleteUser = async (req: Request, res: Response) => {
-  try {
-    await prismaClient.user.delete({ where: { username: "hmmm" } });
+export const deleteUser = async (
+  req: TypedRequest<{ email: string; password: string, }>,
+  res: Response
+) => {
+  const user = await prismaClient.user.findFirst({
+    where: { email: req.body.email, password: req.body.password },
+  });
 
-    res.status(200).send("done");
-  } catch {
-    res.status(400).send("errorx");
+  if (!user) {
+    res.status(404).send({ status: "FAILED", message: "user not found" });
+    return;
   }
+
+  await prismaClient.user.delete({
+    where: { email: user.email },
+  });
+  res
+    .status(200)
+    .send({ status: "OK", message: "resource deleted successfully" });
 };

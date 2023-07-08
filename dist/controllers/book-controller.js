@@ -25,6 +25,13 @@ const getBooks = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getBooks = getBooks;
 const addBook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        // if (!req.session.isLoggedIn) {
+        //   res.status(401).send({
+        //     status: "FAILED",
+        //     message: "you are not authorized to create a resource",
+        //   });
+        //   return;
+        // }
         if (yield prismaClient_1.prismaClient.book.findFirst({ where: { title: req.body.title } }))
             throw "resource already exists";
         yield prismaClient_1.prismaClient.book.create({
@@ -34,9 +41,11 @@ const addBook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 coverImage: req.body.coverImage,
             },
         });
-        res
-            .status(201)
-            .send({ status: "OK", message: "resouce created successfully" });
+        res.status(201).send({
+            status: "OK",
+            message: "resouce created successfully",
+            // isAuthenticated: req.session.isLoggedIn,
+        });
     }
     catch (error) {
         res
@@ -48,10 +57,19 @@ exports.addBook = addBook;
 const editBook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const _id = req.params.id;
     try {
+        // if (!req.session.isLoggedIn) {
+        //   res.status(401).send({
+        //     status: "FAILED",
+        //     message: "you are not authorized to create a resource",
+        //   });
+        //   return;
+        // }
         yield prismaClient_1.prismaClient.book.update({ where: { id: _id }, data: req.body });
-        res
-            .status(204)
-            .send({ status: "OK", messgae: "resource updated successfully" });
+        res.status(204).send({
+            status: "OK",
+            messgae: "resource updated successfully",
+            // isAuthenticated: req.session.isLoggedIn,
+        });
     }
     catch (error) {
         res
